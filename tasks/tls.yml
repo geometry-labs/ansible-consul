@@ -20,24 +20,26 @@
         mode: 0644
       notify: restart consul
 
-    - name: Copy server certificate
-      copy:
-        remote_src: "{{ consul_tls_files_remote_src }}"
-        src: "{{ consul_tls_src_files }}/{{ consul_tls_server_crt | basename }}"
-        dest: "{{ consul_tls_dir }}/{{ consul_tls_server_crt }}"
-        owner: "{{ consul_user }}"
-        group: "{{ consul_group }}"
-        mode: 0644
-      notify: restart consul
+    - block:
+      - name: Copy server certificate
+        copy:
+          remote_src: "{{ consul_tls_files_remote_src }}"
+          src: "{{ consul_tls_src_files }}/{{ consul_tls_server_crt | basename }}"
+          dest: "{{ consul_tls_dir }}/{{ consul_tls_server_crt }}"
+          owner: "{{ consul_user }}"
+          group: "{{ consul_group }}"
+          mode: 0644
+        notify: restart consul
 
-    - name: Copy server key
-      copy:
-        remote_src: "{{ consul_tls_files_remote_src }}"
-        src: "{{ consul_tls_src_files }}/{{ consul_tls_server_key | basename }}"
-        dest: "{{ consul_tls_dir }}/{{ consul_tls_server_key }}"
-        owner: "{{ consul_user }}"
-        group: "{{ consul_group }}"
-        mode: 0600
-      notify: restart consul
+      - name: Copy server key
+        copy:
+          remote_src: "{{ consul_tls_files_remote_src }}"
+          src: "{{ consul_tls_src_files }}/{{ consul_tls_server_key | basename }}"
+          dest: "{{ consul_tls_dir }}/{{ consul_tls_server_key }}"
+          owner: "{{ consul_user }}"
+          group: "{{ consul_group }}"
+          mode: 0600
+        notify: restart consul
+      when: auto_encrypt is not defined or (auto_encrypt is defined and not auto_encrypt.enabled | bool) or (item.config_version != 'client') | bool
 
   when: consul_tls_copy_keys | bool
